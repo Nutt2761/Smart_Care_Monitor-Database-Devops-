@@ -1,33 +1,38 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./layouts/MainLayout";
+
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
-import Reports from "./pages/Reports";
-import Login from "./pages/Login";
-import ProtectedRoute from "./components/ProtectedRoute";
+import VitalSigns from "./pages/VitalSigns";
+import MedicalNotes from "./pages/MedicalNotes";
+import UserManagement from "./pages/UserManagement";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Login page (ไม่ต้องมี layout) */}
+
         <Route path="/login" element={<Login />} />
 
-        {/* หน้า protected ทั้งหมด */}
+        {/* Layout ครอบทุกหน้า */}
         <Route
-          path="/"
           element={
             <ProtectedRoute>
               <MainLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
-          <Route path="patients" element={<Patients />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/vitals" element={<VitalSigns />} />
+          <Route path="/notes" element={<MedicalNotes />} />
+          <Route path="/users" element={<UserManagement />} />
         </Route>
+
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
