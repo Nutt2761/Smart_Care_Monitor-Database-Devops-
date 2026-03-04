@@ -1,11 +1,11 @@
-import { Navigate } from "react-router-dom"
+import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute ({ children }) {
-    const isAuthenticated = localStorage.getItem("token");
+export default function ProtectedRoute({ children }) {
+  const role = localStorage.getItem("role");
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" />;
-    }
+  if (!role) {
+    return <Navigate to="/login" />;
+  }
 
-    return children;
+  return children;
 }

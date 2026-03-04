@@ -1,55 +1,61 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  
+  const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // 🔐 mock users (ไม่มี backend)
+  const users = [
+    {
+      email: "admin@mail.com",
+      password: "admin123",
+      role: "admin",
+    },
+    {
+      email: "doctor@mail.com",
+      password: "doctor123",
+      role: "doctor",
+    },
+  ];
 
-    // ส่งไป backend
-    const response = await fetch("http://localhost:3000/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+  const handleLogin = () => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
 
-    const data = await response.json();
+    const foundUser = users.find(
+      (user) =>
+        user.email === trimmedEmail &&
+        user.password === trimmedPassword
+    );
 
-    if (response.ok) {
-      // เก็บ token
-      localStorage.setItem("token", data.token);
-      navigate("/dashboard");
+    if (foundUser) {
+      localStorage.setItem("role", foundUser.role);
+      localStorage.setItem("email", foundUser.email);
+      navigate("/");
     } else {
-      alert("Login failed");
+      setError("Invalid email or password");
     }
   };
 
-  useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    navigate("/");
-  }
-}, []);
-
-
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-lg shadow-md w-80"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-xl shadow-md w-96 space-y-4">
+        <h1 className="text-2xl font-bold text-center">
+          Smart Care Login
+        </h1>
+
+        {error && (
+          <p className="text-red-600 text-sm">{error}</p>
+        )}
 
         <input
           type="email"
           placeholder="Email"
-          className="w-full p-2 border mb-4 rounded"
+          className="w-full border px-3 py-2 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -57,18 +63,23 @@ export default function Login() {
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-2 border mb-4 rounded"
+          className="w-full border px-3 py-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
-          type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded"
+          onClick={handleLogin}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg"
         >
           Login
         </button>
-      </form>
+
+        <div className="text-sm text-gray-500 mt-4">
+          <p>Admin: admin@mail.com / admin123</p>
+          <p>Doctor: doctor@mail.com / doctor123</p>
+        </div>
+      </div>
     </div>
   );
 }

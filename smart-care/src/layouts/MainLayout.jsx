@@ -1,65 +1,85 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
   HeartPulse, 
   FileText, 
-  Shield 
+  Shield,
+  LogOut
 } from "lucide-react";
 
 export default function MainLayout() {
 
+  const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  const email = localStorage.getItem("email");
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
 
       {/* Sidebar */}
-      <div className="w-64 bg-blue-600 text-white shadow-lg p-5">
-        <h1 className="text-4xl font-bold text-white mb-16">
-          Smart Care
-        </h1>
+      <div className="w-64 bg-blue-600 text-white shadow-lg p-5 flex flex-col justify-between">
 
-        <nav className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-10">
+            Smart Care
+          </h1>
 
-          <Link to="/" className="flex items-center gap-2 hover:text-blue-500">
-            <LayoutDashboard size={18} />
-            Dashboard
-          </Link>
+          {/* 👤 User Info */}
+          <div className="mb-8 bg-blue-500 p-4 rounded-lg">
+            <p className="text-sm opacity-80">Logged in as</p>
+            <p className="font-semibold truncate">{email}</p>
 
-          <Link to="/patients" className="flex items-center gap-2 hover:text-blue-500">
-            <Users size={18} />
-            Patients
-          </Link>
+            <span
+              className={`mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold
+              ${
+                role === "admin"
+                  ? "bg-red-500"
+                  : "bg-blue-800"
+              }`}
+            >
+              {role?.toUpperCase()}
+            </span>
+          </div>
 
-          <Link to="/vitals" className="flex items-center gap-2 hover:text-blue-500">
-            <HeartPulse size={18} />
-            Vital Signs
-          </Link>
+          <nav className="space-y-4">
 
-          <Link to="/notes" className="flex items-center gap-2 hover:text-blue-500">
-            <FileText size={18} />
-            Medical Notes
-          </Link>
-
-          {/* แสดงเฉพาะ admin */}
-          {role === "admin" && (
-            <Link to="/users" className="flex items-center gap-2 hover:text-blue-500">
-              <Shield size={18} />
-              User Management
+            <Link to="/" className="flex items-center gap-2 hover:text-blue-200">
+              <LayoutDashboard size={18} />
+              Dashboard
             </Link>
-          )}
 
-        </nav>
+            <Link to="/patients" className="flex items-center gap-2 hover:text-blue-200">
+              <Users size={18} />
+              Patients
+            </Link>
 
+            <Link to="/notes" className="flex items-center gap-2 hover:text-blue-200">
+              <FileText size={18} />
+              Medical Notes
+            </Link>
+
+            {/* เฉพาะ admin */}
+            {role === "admin" && (
+              <Link to="/users" className="flex items-center gap-2 hover:text-blue-200">
+                <Shield size={18} />
+                User Management
+              </Link>
+            )}
+          </nav>
+        </div>
+
+        {/* 🔓 Logout */}
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("role");
-            window.location.href = "/login";
-          }}
-          className="mt-10 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
+          onClick={handleLogout}
+          className="flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
         >
+          <LogOut size={16} />
           Logout
         </button>
 

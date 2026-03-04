@@ -5,6 +5,7 @@ import MainLayout from "./layouts/MainLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
+import PatientDetail from "./pages/PatientDetail";
 import VitalSigns from "./pages/VitalSigns";
 import MedicalNotes from "./pages/MedicalNotes";
 import UserManagement from "./pages/UserManagement";
@@ -26,7 +27,7 @@ function App() {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients" element={<Patients />} />
-          <Route path="/vitals" element={<VitalSigns />} />
+          <Route path="/patients/:id" element={<PatientDetail />} />
           <Route path="/notes" element={<MedicalNotes />} />
           <Route path="/users" element={<UserManagement />} />
         </Route>
