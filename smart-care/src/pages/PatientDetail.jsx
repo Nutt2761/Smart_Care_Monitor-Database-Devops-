@@ -10,33 +10,17 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-//อันนี้จะเป็นรายละเอียดของสถานะคนไข้ เช่น อัตราการเต้นหัวใจ อุณหภูมิ o2ในเลือด
-
 export default function PatientDetail() {
+
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const patients = [
-    {
-      id: "P001",
-      fullName: "John Smith",
-      age: 45,
-      status: "stable",
-    },
-    {
-      id: "P002",
-      fullName: "Emma Johnson",
-      age: 62,
-      status: "critical",
-    },
-  ];
-
-  const patient = patients.find((p) => p.id === id);
+  const [patient, setPatient] = useState(null);
 
   const thresholds = {
     heartRate: { min: 60, max: 100 },
     temperature: { min: 36, max: 37.5 },
-    spo2: { min: 95, max: 100 }, // o2ในเลือด
+    spo2: { min: 95, max: 100 },
     systolic: { min: 90, max: 140 },
     respiration: { min: 12, max: 20 },
   };
@@ -53,7 +37,20 @@ export default function PatientDetail() {
   });
 
   useEffect(() => {
+
+    const storedPatients =
+      JSON.parse(localStorage.getItem("patients")) || [];
+
+    const foundPatient = storedPatients.find((p) => p.id === id);
+
+    setPatient(foundPatient);
+
+  }, [id]);
+
+  useEffect(() => {
+
     const interval = setInterval(() => {
+
       setVitals((prev) => ({
         ...prev,
         heartRate: prev.heartRate + (Math.random() - 0.5) * 6,
@@ -64,16 +61,22 @@ export default function PatientDetail() {
         respiration: prev.respiration + (Math.random() - 0.5) * 2,
         timestamp: new Date(),
       }));
+
     }, 3000);
 
     return () => clearInterval(interval);
+
   }, [id]);
 
   const isAbnormal = (value, min, max) =>
     value < min || value > max;
 
   if (!patient) {
-    return <div className="p-6 text-red-600">Patient not found</div>;
+    return (
+      <div className="p-6 text-red-600">
+        Patient not found
+      </div>
+    );
   }
 
   const abnormal =
@@ -85,7 +88,7 @@ export default function PatientDetail() {
 
   const Card = ({ title, value, unit, icon, abnormal }) => (
     <div
-      className={`p-4 rounded-lg border transition ${
+      className={`p-4 rounded-lg border ${
         abnormal
           ? "bg-red-50 border-red-500"
           : "bg-gray-50 border-gray-200"
@@ -95,12 +98,15 @@ export default function PatientDetail() {
         {icon}
         <span>{title}</span>
       </div>
+
       <p className="text-2xl font-bold">
         {value} <span className="text-sm">{unit}</span>
       </p>
+
       {abnormal && (
         <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-          <AlertCircle size={12} /> Abnormal
+          <AlertCircle size={12} />
+          Abnormal
         </p>
       )}
     </div>
@@ -117,16 +123,34 @@ export default function PatientDetail() {
         Back
       </button>
 
+      {/* Patient Info */}
       <div>
+
         <h1 className="text-3xl font-bold">
           {patient.fullName}
         </h1>
+
         <p className="text-gray-600">
           Patient ID: {patient.id}
         </p>
+
+        <div className="mt-4 grid md:grid-cols-3 gap-4 text-sm">
+
+          <p><b>Age:</b> {patient.age}</p>
+          <p><b>Birth Date:</b> {patient.birthDate}</p>
+          <p><b>Blood Type:</b> {patient.bloodType}</p>
+          <p><b>Weight:</b> {patient.weight} kg</p>
+          <p><b>Height:</b> {patient.height} cm</p>
+          <p><b>Status:</b> {patient.status}</p>
+          <p><b>Chronic Disease:</b> {patient.chronicDisease}</p>
+          <p><b>Allergy:</b> {patient.allergyHistory}</p>
+          <p><b>Medication:</b> {patient.currentMedication}</p>
+          <p><b>Emergency Contact:</b> {patient.emergencyContact}</p>
+
+        </div>
+
       </div>
 
-      {/* 🚨 Critical Alert */}
       {(patient.status === "critical" || abnormal) && (
         <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           ⚠️ Patient requires attention
@@ -135,6 +159,7 @@ export default function PatientDetail() {
 
       {/* Vital Signs */}
       <div className="bg-white shadow-md rounded-xl p-6">
+
         <h2 className="text-xl font-semibold mb-6">
           Vital Signs (Live Monitoring)
         </h2>
@@ -155,9 +180,7 @@ export default function PatientDetail() {
 
           <Card
             title="Blood Pressure"
-            value={`${Math.round(vitals.systolic)}/${Math.round(
-              vitals.diastolic
-            )}`}
+            value={`${Math.round(vitals.systolic)}/${Math.round(vitals.diastolic)}`}
             unit="mmHg"
             icon={<Droplet />}
             abnormal={isAbnormal(
@@ -204,6 +227,7 @@ export default function PatientDetail() {
         <p className="text-xs text-gray-400 mt-6">
           Last Updated: {vitals.timestamp.toLocaleTimeString()}
         </p>
+
       </div>
 
     </div>

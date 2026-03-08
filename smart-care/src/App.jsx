@@ -9,6 +9,7 @@ import PatientDetail from "./pages/PatientDetail";
 import VitalSigns from "./pages/VitalSigns";
 import MedicalNotes from "./pages/MedicalNotes";
 import UserManagement from "./pages/UserManagement";
+import AddPatient from "./pages/AddPatient";
 
 function App() {
   return (
@@ -17,7 +18,6 @@ function App() {
 
         <Route path="/login" element={<Login />} />
 
-        {/* Layout ครอบทุกหน้า */}
         <Route
           element={
             <ProtectedRoute>
@@ -27,6 +27,7 @@ function App() {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients" element={<Patients />} />
+          <Route path="/patients/add" element={<AddPatient />} />
           <Route path="/patients/:id" element={<PatientDetail />} />
           <Route path="/notes" element={<MedicalNotes />} />
           <Route path="/users" element={<UserManagement />} />
