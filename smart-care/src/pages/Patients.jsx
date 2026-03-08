@@ -2,25 +2,26 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, Trash2, Plus } from "lucide-react";
 
+// คนไข้
 export default function Patients() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
 
-  const [patients, setPatients] = useState([
+  const [patients, setPatients] = useState([ // อันนี้ set ค่าเริ่มต้นมาก่อนเฉยๆ 
     {
-      id: "P001",
-      fullName: "John Smith",
-      birthDate: "1980-05-10",
-      age: 45,
-      weight: 78,
-      height: 175,
-      bloodType: "O+",
-      chronicDisease: "Hypertension",
-      allergyHistory: "Penicillin",
-      currentMedication: "Amlodipine",
-      emergencyContact: "0812345678",
-      status: "stable",
+      id: "P001", // ID 
+      fullName: "John Smith", //ชือ
+      birthDate: "1980-05-10", //วันเกิด
+      age: 45, //อายุ
+      weight: 78, //น้ำหนัก
+      height: 175, //ส่วนสูง
+      bloodType: "O+", // กรุ๊ปเลือด
+      chronicDisease: "Hypertension", //โรคเรื้อรัง
+      allergyHistory: "Penicillin", //ประวัติการแพ้
+      currentMedication: "Amlodipine", //ยาที่ต้องทานปัจุบัน
+      emergencyContact: "0812345678", //เบอร์โทร์ฉุกเฉิน
+      status: "stable", //สถานะ
     },
     {
       id: "P002",
@@ -38,12 +39,13 @@ export default function Patients() {
     },
   ]);
 
+  // สถานะ จะมีอยู่ 3 สถานะคือ critical(วิกฤต,อันตราย) , stable(คงที่) ,active(กำลังรักษา)
   const getStatusStyle = (status) => {
-    if (status === "critical")
+    if (status === "critical") //critical(วิกฤต,อันตราย)
       return "bg-red-600 text-white";
-    if (status === "stable")
+    if (status === "stable") //stable(คงที่)
       return "bg-blue-600 text-white";
-    if (status === "active")
+    if (status === "active") //active(กำลังรักษา)
       return "bg-green-600 text-white";
     return "bg-gray-500 text-white";
   };

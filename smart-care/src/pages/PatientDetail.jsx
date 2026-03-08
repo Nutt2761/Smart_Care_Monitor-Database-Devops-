@@ -10,6 +10,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+//อันนี้จะเป็นรายละเอียดของสถานะคนไข้ เช่น อัตราการเต้นหัวใจ อุณหภูมิ o2ในเลือด
+
 export default function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function PatientDetail() {
   const thresholds = {
     heartRate: { min: 60, max: 100 },
     temperature: { min: 36, max: 37.5 },
-    spo2: { min: 95, max: 100 },
+    spo2: { min: 95, max: 100 }, // o2ในเลือด
     systolic: { min: 90, max: 140 },
     respiration: { min: 12, max: 20 },
   };
