@@ -6,6 +6,8 @@ export default function AddPatient() {
 
   const navigate = useNavigate();
 
+  const role = localStorage.getItem("role");
+
   const [patient, setPatient] = useState({
     id: "",
     fullName: "",
