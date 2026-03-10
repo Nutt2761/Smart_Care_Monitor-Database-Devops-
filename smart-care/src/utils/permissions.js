@@ -2,8 +2,12 @@ const permissions = {
 
   admin: [
     "viewPatients",
+    "addPatient",
+    "deletePatient",
+    "addNote",
     "manageUsers",
-    "viewNotes"
+    "viewNotes",
+    "editNote"
   ],
 
   doctor: [
