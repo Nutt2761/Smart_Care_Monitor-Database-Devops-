@@ -6,6 +6,7 @@ import {
   UserCheck,
   Bell
 } from "lucide-react";
+import { getPatients } from "../services/patientService";
 
 export default function Dashboard() {
 
@@ -16,10 +17,10 @@ export default function Dashboard() {
 
   useEffect(() => {
 
-    const storedPatients = JSON.parse(localStorage.getItem("patients")) || [];
-    setPatients(storedPatients);
+  const data = getPatients();
+  setPatients(data);
 
-  }, []);
+}, []);
 
   const totalPatients = patients.length;
 

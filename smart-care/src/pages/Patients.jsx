@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { can } from "../utils/can";
+import { getPatients, deletePatient } from "../services/patientService";
 
 export default function Patients() {
 
@@ -12,6 +13,8 @@ export default function Patients() {
 
   useEffect(() => {
 
+    const data = getPatients();
+    setPatients(data);
     const storedPatients = JSON.parse(localStorage.getItem("patients"));
 
     if (storedPatients && storedPatients.length > 0) {
@@ -55,19 +58,16 @@ export default function Patients() {
 
   const handleDelete = (id) => {
 
-    if (!can("deletePatient")) return;
+  if (!can("deletePatient")) return;
 
-    if (window.confirm("Are you sure you want to delete this patient?")) {
+  if (window.confirm("Are you sure?")) {
 
-      const updated = patients.filter((p) => p.id !== id);
+    const updated = deletePatient(id);
+    setPatients(updated);
 
-      setPatients(updated);
+  }
 
-      localStorage.setItem("patients", JSON.stringify(updated));
-
-    }
-
-  };
+};
 
   const filteredPatients = patients.filter((patient) => {
 
