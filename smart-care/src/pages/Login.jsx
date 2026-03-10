@@ -20,6 +20,11 @@ export default function Login() {
       password: "doctor123",
       role: "doctor",
     },
+    {
+      email: "nurse@mail.com",
+      password: "nurse123",
+      role: "nurse",
+    },
   ];
 
   const handleLogin = () => {
@@ -35,7 +40,9 @@ export default function Login() {
     if (foundUser) {
       localStorage.setItem("role", foundUser.role);
       localStorage.setItem("email", foundUser.email);
-      navigate("/");
+
+      // 🔥 แก้ตรงนี้
+      navigate("/dashboard");
     } else {
       setError("Invalid email or password");
     }
@@ -57,7 +64,10 @@ export default function Login() {
           placeholder="Email"
           className="w-full border px-3 py-2 rounded"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+          }}
         />
 
         <input
@@ -65,7 +75,10 @@ export default function Login() {
           placeholder="Password"
           className="w-full border px-3 py-2 rounded"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError("");
+          }}
         />
 
         <button
@@ -78,9 +91,9 @@ export default function Login() {
         <div className="text-sm text-gray-500 mt-4">
           <p>Admin: admin@mail.com / admin123</p>
           <p>Doctor: doctor@mail.com / doctor123</p>
+          <p>Nurse: nurse@mail.com / nurse123</p>
         </div>
       </div>
     </div>
   );
 }
-// hello

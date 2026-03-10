@@ -14,6 +14,7 @@ export default function PatientDetail() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const role = localStorage.getItem("role");
 
   const [patient, setPatient] = useState(null);
 
