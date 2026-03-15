@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
 export default function MedicalNotes() {
 
   const role = localStorage.getItem("role");
   const email = localStorage.getItem("email");
 
+  // ❌ patient เข้าไม่ได้
+  if (role === "patient") {
+    return <Navigate to="/dashboard" />;
+  }
+
   const [search, setSearch] = useState("");
-  const [addendumFor, setAddendumFor] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editedContent, setEditedContent] = useState("");
 
   const [notes, setNotes] = useState([
     {
@@ -18,18 +25,7 @@ export default function MedicalNotes() {
       author: "Dr. Smith",
       role: "doctor",
       timestamp: new Date(),
-      parentNoteId: null,
-    },
-    {
-      id: 2,
-      patientId: "P002",
-      type: "Nursing Note",
-      content: "Vitals stable",
-      author: "Nurse Anna",
-      role: "nurse",
-      timestamp: new Date(),
-      parentNoteId: null,
-    },
+    }
   ]);
 
   const [newNote, setNewNote] = useState({
@@ -41,22 +37,19 @@ export default function MedicalNotes() {
     note.patientId.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Add Note (doctor เท่านั้น)
   const handleAddNote = () => {
 
     if (!newNote.patientId || !newNote.content) return;
 
-    const type =
-      role === "doctor" ? "Doctor Comment" : "Nursing Note";
-
     const note = {
       id: Date.now(),
       patientId: newNote.patientId,
-      type,
+      type: "Doctor Comment",
       content: newNote.content,
       author: email,
-      role,
+      role: "doctor",
       timestamp: new Date(),
-      parentNoteId: null,
     };
 
     setNotes([note, ...notes]);
@@ -68,55 +61,45 @@ export default function MedicalNotes() {
 
   };
 
-  const handleAddendum = (note) => {
+  // Delete (admin เท่านั้น)
+  const handleDelete = (id) => {
 
-    if (!newNote.content) return;
-
-    const addendum = {
-      id: Date.now(),
-      patientId: note.patientId,
-      type: "Addendum",
-      content: newNote.content,
-      author: email,
-      role,
-      timestamp: new Date(),
-      parentNoteId: note.id,
-    };
-
-    setNotes([addendum, ...notes]);
-
-    setAddendumFor(null);
-    setNewNote({ ...newNote, content: "" });
+    if (window.confirm("Delete this note?")) {
+      setNotes(notes.filter((note) => note.id !== id));
+    }
 
   };
 
-  const getTypeStyle = (type) =>
-    type === "Doctor Comment"
-      ? "bg-blue-50 border-blue-600"
-      : type === "Nursing Note"
-      ? "bg-green-50 border-green-600"
-      : "bg-yellow-50 border-yellow-600";
+  // Edit
+  const handleEdit = (note) => {
 
-  const getBadgeStyle = (type) =>
-    type === "Doctor Comment"
-      ? "bg-blue-600 text-white"
-      : type === "Nursing Note"
-      ? "bg-green-600 text-white"
-      : "bg-yellow-600 text-white";
-
-  const getRoleBadge = (role) => {
-
-    if (role === "doctor")
-      return "bg-blue-100 text-blue-700";
-
-    if (role === "nurse")
-      return "bg-green-100 text-green-700";
-
-    return "bg-gray-100 text-gray-700";
+    setEditingId(note.id);
+    setEditedContent(note.content);
 
   };
+
+  const handleSave = (id) => {
+
+    setNotes(
+      notes.map((note) =>
+        note.id === id
+          ? { ...note, content: editedContent }
+          : note
+      )
+    );
+
+    setEditingId(null);
+
+  };
+
+  const getTypeStyle = () =>
+    "bg-blue-50 border-blue-600";
+
+  const getBadgeStyle = () =>
+    "bg-blue-600 text-white";
 
   return (
+
     <div className="space-y-6">
 
       {/* Header */}
@@ -130,9 +113,9 @@ export default function MedicalNotes() {
         </p>
       </div>
 
-      {/* Add Note */}
+      {/* Add Note (doctor เท่านั้น) */}
 
-      {(role === "doctor" || role === "nurse" || role === "admin") && (
+      {role === "doctor" && (
 
         <div className="bg-white p-6 rounded-xl shadow space-y-4">
 
@@ -179,7 +162,7 @@ export default function MedicalNotes() {
 
       )}
 
-      {/* Notes List */}
+      {/* Notes */}
 
       <div className="bg-white shadow-md rounded-xl p-6">
 
@@ -207,7 +190,7 @@ export default function MedicalNotes() {
 
             <div
               key={note.id}
-              className={`p-4 rounded-lg border-l-4 ${getTypeStyle(note.type)}`}
+              className={`p-4 rounded-lg border-l-4 ${getTypeStyle()}`}
             >
 
               <div className="flex justify-between mb-2">
@@ -215,13 +198,13 @@ export default function MedicalNotes() {
                 <div>
 
                   <span
-                    className={`px-3 py-1 text-xs rounded-full ${getBadgeStyle(note.type)}`}
+                    className={`px-3 py-1 text-xs rounded-full ${getBadgeStyle()}`}
                   >
                     {note.type}
                   </span>
 
                   <span
-                    className={`ml-2 px-2 py-1 text-xs rounded-full ${getRoleBadge(note.role)}`}
+                    className="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
                   >
                     {note.role}
                   </span>
@@ -242,41 +225,69 @@ export default function MedicalNotes() {
 
               </div>
 
-              <p>{note.content}</p>
+              {/* Content */}
 
-              {/* Addendum */}
+              {editingId === note.id ? (
 
-                <button
-                  onClick={() =>
-                    setAddendumFor(addendumFor === note.id ? null : note.id)
-                  }
-                  className="text-blue-600 text-sm mt-2"
-                >
-                {addendumFor === note.id ? "Cancel Addendum" : "Add Addendum"}
-                </button>
-
-              {addendumFor === note.id && (
-
-                <div className="mt-3 space-y-2">
+                <div className="flex gap-2 mt-2">
 
                   <input
-                    placeholder="Add correction or update..."
-                    value={newNote.content}
+                    value={editedContent}
                     onChange={(e) =>
-                      setNewNote({
-                        ...newNote,
-                        content: e.target.value
-                      })
+                      setEditedContent(e.target.value)
                     }
-                    className="border px-3 py-2 rounded w-full"
+                    className="border px-3 py-1 rounded w-full"
                   />
 
                   <button
-                    onClick={() => handleAddendum(note)}
+                    onClick={() => handleSave(note.id)}
                     className="bg-green-600 text-white px-3 py-1 rounded"
                   >
-                    Save Addendum
+                    <Save size={16} />
                   </button>
+
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="bg-gray-400 text-white px-3 py-1 rounded"
+                  >
+                    <X size={16} />
+                  </button>
+
+                </div>
+
+              ) : (
+
+                <p className="mt-2">{note.content}</p>
+
+              )}
+
+              {/* Buttons */}
+
+              {(role === "admin" || role === "doctor") && (
+
+                <div className="flex gap-2 mt-3">
+
+                  {editingId !== note.id && (
+
+                    <button
+                      onClick={() => handleEdit(note)}
+                      className="bg-blue-600 text-white px-3 py-1 rounded"
+                    >
+                      <Edit size={16} />
+                    </button>
+
+                  )}
+
+                  {role === "admin" && (
+
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                  )}
 
                 </div>
 
@@ -291,5 +302,7 @@ export default function MedicalNotes() {
       </div>
 
     </div>
+
   );
+
 }
