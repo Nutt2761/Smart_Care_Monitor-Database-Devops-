@@ -10,17 +10,20 @@ import VitalSigns from "./pages/VitalSigns";
 import MedicalNotes from "./pages/MedicalNotes";
 import UserManagement from "./pages/UserManagement_Admin";
 import AddPatient from "./pages/AddPatient";
+import Appointments from "./pages/Appointments";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* แก้ปัญหา route "/" */}
+        {/* redirect root */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
 
+        {/* login */}
         <Route path="/login" element={<Login />} />
 
+        {/* protected layout */}
         <Route
           element={
             <ProtectedRoute>
@@ -29,15 +32,17 @@ function App() {
           }
         >
 
+          {/* dashboard */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse"]}>
+              <ProtectedRoute allow={["admin"]}>
                 <Dashboard />
               </ProtectedRoute>
             }
           />
 
+          {/* patients */}
           <Route
             path="/patients"
             element={
@@ -47,6 +52,7 @@ function App() {
             }
           />
 
+          {/* add patient */}
           <Route
             path="/patients/add"
             element={
@@ -56,6 +62,7 @@ function App() {
             }
           />
 
+          {/* patient detail */}
           <Route
             path="/patients/:id"
             element={
@@ -65,6 +72,7 @@ function App() {
             }
           />
 
+          {/* medical notes */}
           <Route
             path="/notes"
             element={
@@ -74,6 +82,7 @@ function App() {
             }
           />
 
+          {/* vital signs */}
           <Route
             path="/vitals"
             element={
@@ -83,6 +92,17 @@ function App() {
             }
           />
 
+          {/* appointments */}
+          <Route
+            path="/appointments"
+            element={
+              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+                <Appointments />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* admin user management */}
           <Route
             path="/users"
             element={
