@@ -2,7 +2,6 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
-  HeartPulse, 
   FileText, 
   Shield,
   LogOut
@@ -30,7 +29,7 @@ export default function MainLayout() {
             Smart Care
           </h1>
 
-          {/* 👤 User Info */}
+          {/* User Info */}
           <div className="mb-8 bg-blue-500 p-4 rounded-lg">
             <p className="text-sm opacity-80">Logged in as</p>
             <p className="font-semibold truncate">{email}</p>
@@ -49,10 +48,13 @@ export default function MainLayout() {
 
           <nav className="space-y-4">
 
-            <Link to="/" className="flex items-center gap-2 hover:text-blue-200">
-              <LayoutDashboard size={18} />
-              Dashboard
-            </Link>
+            {/* Dashboard → Admin เท่านั้น */}
+            {role === "admin" && (
+              <Link to="/" className="flex items-center gap-2 hover:text-blue-200">
+                <LayoutDashboard size={18} />
+                Dashboard
+              </Link>
+            )}
 
             <Link to="/patients" className="flex items-center gap-2 hover:text-blue-200">
               <Users size={18} />
@@ -64,17 +66,18 @@ export default function MainLayout() {
               Medical Notes
             </Link>
 
-            {/* เฉพาะ admin */}
+            {/* Admin only */}
             {role === "admin" && (
               <Link to="/users" className="flex items-center gap-2 hover:text-blue-200">
                 <Shield size={18} />
                 User Management
               </Link>
             )}
+
           </nav>
         </div>
 
-        {/* 🔓 Logout */}
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
