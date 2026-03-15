@@ -5,7 +5,6 @@ import { Navigate } from "react-router-dom";
 export default function MedicalNotes() {
 
   const role = localStorage.getItem("role");
-  const email = localStorage.getItem("email");
 
   // ❌ patient เข้าไม่ได้
   if (role === "patient") {
@@ -30,6 +29,7 @@ export default function MedicalNotes() {
 
   const [newNote, setNewNote] = useState({
     patientId: "",
+    doctorName: "",
     content: "",
   });
 
@@ -40,14 +40,14 @@ export default function MedicalNotes() {
   // Add Note (doctor เท่านั้น)
   const handleAddNote = () => {
 
-    if (!newNote.patientId || !newNote.content) return;
+    if (!newNote.patientId || !newNote.content || !newNote.doctorName) return;
 
     const note = {
       id: Date.now(),
       patientId: newNote.patientId,
       type: "Doctor Comment",
       content: newNote.content,
-      author: email,
+      author: newNote.doctorName,
       role: "doctor",
       timestamp: new Date(),
     };
@@ -56,6 +56,7 @@ export default function MedicalNotes() {
 
     setNewNote({
       patientId: "",
+      doctorName: "",
       content: "",
     });
 
@@ -92,12 +93,6 @@ export default function MedicalNotes() {
 
   };
 
-  const getTypeStyle = () =>
-    "bg-blue-50 border-blue-600";
-
-  const getBadgeStyle = () =>
-    "bg-blue-600 text-white";
-
   return (
 
     <div className="space-y-6">
@@ -123,7 +118,7 @@ export default function MedicalNotes() {
             <Plus size={16} /> Add Medical Note
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
 
             <input
               placeholder="Patient ID"
@@ -132,6 +127,18 @@ export default function MedicalNotes() {
                 setNewNote({
                   ...newNote,
                   patientId: e.target.value
+                })
+              }
+              className="border px-3 py-2 rounded"
+            />
+
+            <input
+              placeholder="Doctor Name"
+              value={newNote.doctorName}
+              onChange={(e) =>
+                setNewNote({
+                  ...newNote,
+                  doctorName: e.target.value
                 })
               }
               className="border px-3 py-2 rounded"
@@ -190,22 +197,18 @@ export default function MedicalNotes() {
 
             <div
               key={note.id}
-              className={`p-4 rounded-lg border-l-4 ${getTypeStyle()}`}
+              className="p-4 rounded-lg border-l-4 bg-blue-50 border-blue-600"
             >
 
               <div className="flex justify-between mb-2">
 
                 <div>
 
-                  <span
-                    className={`px-3 py-1 text-xs rounded-full ${getBadgeStyle()}`}
-                  >
+                  <span className="px-3 py-1 text-xs rounded-full bg-blue-600 text-white">
                     {note.type}
                   </span>
 
-                  <span
-                    className="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
-                  >
+                  <span className="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
                     {note.role}
                   </span>
 
@@ -224,8 +227,6 @@ export default function MedicalNotes() {
                 </p>
 
               </div>
-
-              {/* Content */}
 
               {editingId === note.id ? (
 
@@ -260,8 +261,6 @@ export default function MedicalNotes() {
                 <p className="mt-2">{note.content}</p>
 
               )}
-
-              {/* Buttons */}
 
               {(role === "admin" || role === "doctor") && (
 
