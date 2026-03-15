@@ -12,6 +12,7 @@ import UserManagement from "./pages/UserManagement_Admin";
 import AddPatient from "./pages/AddPatient";
 import Appointments from "./pages/Appointments";
 import LabResults from "./pages/LabResults";
+import Medications from "./pages/Medications";
 
 function App() {
   return (
@@ -103,12 +104,22 @@ function App() {
             }
           />
 
-          {/* lab results ⭐ */}
+          {/* lab results */}
           <Route
             path="/lab-results"
             element={
               <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
                 <LabResults />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* medications 💊 */}
+          <Route
+            path="/medications"
+            element={
+              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+                <Medications />
               </ProtectedRoute>
             }
           />

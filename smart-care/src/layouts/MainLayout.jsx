@@ -6,6 +6,7 @@ import {
   Shield,
   Calendar,
   FlaskConical,
+  Pill,
   LogOut
 } from "lucide-react";
 
@@ -82,10 +83,16 @@ export default function MainLayout() {
               Appointments
             </Link>
 
-            {/* Lab Results ⭐ */}
+            {/* Lab Results */}
             <Link to="/lab-results" className="flex items-center gap-2 hover:text-blue-200">
               <FlaskConical size={18}/>
               Lab Results
+            </Link>
+
+            {/* Medications 💊 */}
+            <Link to="/medications" className="flex items-center gap-2 hover:text-blue-200">
+              <Pill size={18}/>
+              Medications
             </Link>
 
             {/* User Management */}
