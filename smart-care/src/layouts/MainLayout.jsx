@@ -5,6 +5,7 @@ import {
   FileText, 
   Shield,
   Calendar,
+  FlaskConical,
   LogOut
 } from "lucide-react";
 
@@ -26,43 +27,68 @@ export default function MainLayout() {
       <div className="w-64 bg-blue-600 text-white shadow-lg p-5 flex flex-col justify-between">
 
         <div>
+
           <h1 className="text-3xl font-bold mb-10">
             Smart Care
           </h1>
 
+          {/* User Info */}
           <div className="mb-8 bg-blue-500 p-4 rounded-lg">
             <p className="text-sm opacity-80">Logged in as</p>
             <p className="font-semibold truncate">{email}</p>
 
-            <span className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-800">
+            <span
+              className={`mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold
+              ${
+                role === "admin"
+                  ? "bg-red-500"
+                  : "bg-blue-800"
+              }`}
+            >
               {role?.toUpperCase()}
             </span>
           </div>
 
+          {/* Menu */}
           <nav className="space-y-4">
 
+            {/* Dashboard admin only */}
             {role === "admin" && (
-              <Link to="/" className="flex items-center gap-2 hover:text-blue-200">
+              <Link to="/dashboard" className="flex items-center gap-2 hover:text-blue-200">
                 <LayoutDashboard size={18}/>
                 Dashboard
               </Link>
             )}
 
-            <Link to="/patients" className="flex items-center gap-2 hover:text-blue-200">
-              <Users size={18}/>
-              Patients
-            </Link>
+            {/* Patients */}
+            {(role === "admin" || role === "doctor" || role === "nurse") && (
+              <Link to="/patients" className="flex items-center gap-2 hover:text-blue-200">
+                <Users size={18}/>
+                Patients
+              </Link>
+            )}
 
-            <Link to="/notes" className="flex items-center gap-2 hover:text-blue-200">
-              <FileText size={18}/>
-              Medical Notes
-            </Link>
+            {/* Medical Notes */}
+            {(role === "admin" || role === "doctor" || role === "nurse") && (
+              <Link to="/notes" className="flex items-center gap-2 hover:text-blue-200">
+                <FileText size={18}/>
+                Medical Notes
+              </Link>
+            )}
 
+            {/* Appointments */}
             <Link to="/appointments" className="flex items-center gap-2 hover:text-blue-200">
               <Calendar size={18}/>
               Appointments
             </Link>
 
+            {/* Lab Results ⭐ */}
+            <Link to="/lab-results" className="flex items-center gap-2 hover:text-blue-200">
+              <FlaskConical size={18}/>
+              Lab Results
+            </Link>
+
+            {/* User Management */}
             {role === "admin" && (
               <Link to="/users" className="flex items-center gap-2 hover:text-blue-200">
                 <Shield size={18}/>
@@ -73,6 +99,7 @@ export default function MainLayout() {
           </nav>
         </div>
 
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
@@ -83,6 +110,7 @@ export default function MainLayout() {
 
       </div>
 
+      {/* Content */}
       <div className="flex-1 p-8 overflow-y-auto">
         <Outlet />
       </div>

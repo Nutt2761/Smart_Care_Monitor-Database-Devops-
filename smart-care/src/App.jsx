@@ -11,6 +11,7 @@ import MedicalNotes from "./pages/MedicalNotes";
 import UserManagement from "./pages/UserManagement_Admin";
 import AddPatient from "./pages/AddPatient";
 import Appointments from "./pages/Appointments";
+import LabResults from "./pages/LabResults";
 
 function App() {
   return (
@@ -98,6 +99,16 @@ function App() {
             element={
               <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
                 <Appointments />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* lab results ⭐ */}
+          <Route
+            path="/lab-results"
+            element={
+              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+                <LabResults />
               </ProtectedRoute>
             }
           />

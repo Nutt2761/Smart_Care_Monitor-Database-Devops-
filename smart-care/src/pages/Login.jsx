@@ -9,7 +9,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 🔐 mock users (ไม่มี backend)
   const users = [
     {
       email: "admin@mail.com",
@@ -49,7 +48,16 @@ export default function Login() {
       localStorage.setItem("role", foundUser.role);
       localStorage.setItem("email", foundUser.email);
 
-      navigate("/dashboard");
+      // redirect ตาม role
+      if (foundUser.role === "admin") {
+        navigate("/dashboard");
+      } else if (foundUser.role === "doctor") {
+        navigate("/patients");
+      } else if (foundUser.role === "nurse") {
+        navigate("/patients");
+      } else if (foundUser.role === "patient") {
+        navigate("/lab-results");
+      }
 
     } else {
 
