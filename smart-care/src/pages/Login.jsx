@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -25,9 +26,15 @@ export default function Login() {
       password: "nurse123",
       role: "nurse",
     },
+    {
+      email: "patient@mail.com",
+      password: "patient123",
+      role: "patient",
+    },
   ];
 
   const handleLogin = () => {
+
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
 
@@ -38,25 +45,34 @@ export default function Login() {
     );
 
     if (foundUser) {
+
       localStorage.setItem("role", foundUser.role);
       localStorage.setItem("email", foundUser.email);
 
-      // 🔥 แก้ตรงนี้
       navigate("/dashboard");
+
     } else {
+
       setError("Invalid email or password");
+
     }
+
   };
 
   return (
+
     <div className="flex items-center justify-center h-screen bg-gray-100">
+
       <div className="bg-white p-8 rounded-xl shadow-md w-96 space-y-4">
+
         <h1 className="text-2xl font-bold text-center">
           Smart Care Login
         </h1>
 
         {error && (
-          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-red-600 text-sm">
+            {error}
+          </p>
         )}
 
         <input
@@ -92,8 +108,13 @@ export default function Login() {
           <p>Admin: admin@mail.com / admin123</p>
           <p>Doctor: doctor@mail.com / doctor123</p>
           <p>Nurse: nurse@mail.com / nurse123</p>
+          <p>Patient: patient@mail.com / patient123</p>
         </div>
+
       </div>
+
     </div>
+
   );
+
 }
