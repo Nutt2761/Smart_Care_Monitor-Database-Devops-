@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 export default function Medications(){
 
 const role = localStorage.getItem("role");
-const doctorId = localStorage.getItem("email"); // ใช้เป็น ID
+const doctorId = localStorage.getItem("email");
 
 // ✅ โหลดจาก localStorage
 const [records,setRecords] = useState(()=>{
@@ -23,7 +23,7 @@ nurseNote:"Take after breakfast and dinner"
 ];
 });
 
-// ✅ save ทุกครั้งที่มีการเปลี่ยน
+// ✅ save
 useEffect(()=>{
 localStorage.setItem("medications",JSON.stringify(records));
 },[records]);
@@ -72,14 +72,39 @@ nurseNote:""
 };
 
 
-// ================= NURSE =================
+// ================= NURSE (🔥 FIX (Old)) =================
 const handleNurseUpdate = (id)=>{
 
-const updated = records.map(r=>
-r.id === id
-? {...r,nurseNote:form.nurseNote}
-: r
-);
+const updated = records.map(r => {
+
+  if(r.id === id){
+
+    const newNote = form.nurseNote;
+
+    // 🔥 แยก note เก่า
+    const oldNotes = r.nurseNote
+      ? r.nurseNote.split("\n").map(n =>
+          n.replace(" (Old)", "")
+        )
+      : [];
+
+    // 🔥 ใส่ (Old) ใหม่
+    const formattedOldNotes = oldNotes.map(n => `${n} (Old)`);
+
+    // 🔥 รวมใหม่
+    const combinedNote = [
+      newNote,
+      ...formattedOldNotes
+    ].join("\n");
+
+    return {
+      ...r,
+      nurseNote: combinedNote
+    };
+  }
+
+  return r;
+});
 
 setRecords(updated);
 
@@ -109,7 +134,7 @@ Medication Records
 </h1>
 
 
-{/* ================= DOCTOR FORM ================= */}
+{/* ================= DOCTOR ================= */}
 {role === "doctor" && (
 
 <div className="bg-white p-6 rounded-xl shadow space-y-3">
@@ -140,7 +165,7 @@ className="border p-2 rounded w-full"
 />
 
 <input
-placeholder="Medicine Type (Capsule / Cream / Tablet)"
+placeholder="Medicine Type"
 value={form.type}
 onChange={(e)=>setForm({...form,type:e.target.value})}
 className="border p-2 rounded w-full"
@@ -165,7 +190,7 @@ Add Medication
 )}
 
 
-{/* ================= RECORD LIST ================= */}
+{/* ================= LIST ================= */}
 <div className="bg-white p-6 rounded-xl shadow">
 
 <h2 className="text-xl font-semibold mb-4">
@@ -176,10 +201,7 @@ Medication Records
 
 {visibleRecords.map((r)=>(
 
-<div
-key={r.id}
-className="border p-4 rounded-lg"
->
+<div key={r.id} className="border p-4 rounded-lg">
 
 <p className="font-semibold">
 Patient: {r.patient}
@@ -209,7 +231,8 @@ Type: {r.type}
 Usage: {r.usage}
 </p>
 
-<p className="text-sm text-green-700">
+{/* ⭐ แสดงหลายบรรทัด */}
+<p className="text-sm text-green-700 whitespace-pre-line">
 Nurse Note: {r.nurseNote || "Waiting for nurse explanation"}
 </p>
 
