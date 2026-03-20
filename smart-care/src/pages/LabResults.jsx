@@ -5,7 +5,6 @@ export default function LabResults(){
 const role = localStorage.getItem("role");
 const email = localStorage.getItem("email");
 
-// ⭐ แก้โครงสร้างข้อมูล
 const [records,setRecords] = useState([
 {
 id:1,
@@ -19,7 +18,6 @@ nurseNote:"Patient advised to reduce fatty food"
 }
 ]);
 
-// ⭐ เพิ่ม doctorName
 const [form,setForm] = useState({
 patient:"",
 doctorName:"",
@@ -28,9 +26,10 @@ result:"",
 nurseNote:""
 });
 
+
+// ================= DOCTOR =================
 const handleDoctorSubmit = ()=>{
 
-// 🔒 กันลืมกรอกชื่อหมอ
 if(!form.doctorName){
   alert("Please enter doctor name");
   return;
@@ -39,8 +38,8 @@ if(!form.doctorName){
 const newRecord = {
 id:Date.now(),
 patient:form.patient,
-doctorId: email,              // ⭐ ใช้ email เป็น ID
-doctorName: form.doctorName,  // ⭐ ชื่อหมอ
+doctorId: email,
+doctorName: form.doctorName,
 date:new Date().toISOString().split("T")[0],
 test:form.test,
 result:form.result,
@@ -59,13 +58,40 @@ nurseNote:""
 
 };
 
+
+// ================= NURSE (FIX BUG (Old)) =================
 const handleNurseUpdate = (id)=>{
 
-const updated = records.map(r=>
-r.id === id
-? {...r,nurseNote:form.nurseNote}
-: r
-);
+const updated = records.map(r => {
+
+  if(r.id === id){
+
+    const newNote = form.nurseNote;
+
+    // 🔥 แยก note เก่า
+    const oldNotes = r.nurseNote
+      ? r.nurseNote.split("\n").map(n =>
+          n.replace(" (Old)", "")
+        )
+      : [];
+
+    // 🔥 ใส่ (Old) ใหม่ให้ทุกตัว
+    const formattedOldNotes = oldNotes.map(n => `${n} (Old)`);
+
+    // 🔥 รวมใหม่ (ล่าสุดอยู่บน)
+    const combinedNote = [
+      newNote,
+      ...formattedOldNotes
+    ].join("\n");
+
+    return {
+      ...r,
+      nurseNote: combinedNote
+    };
+  }
+
+  return r;
+});
 
 setRecords(updated);
 
@@ -73,15 +99,18 @@ setForm({...form,nurseNote:""});
 
 };
 
+
+// ================= FILTER =================
 const visibleRecords = records.filter(r=>{
 
 if(role === "patient") return r.patient === email;
 
-if(role === "doctor") return r.doctorId === email; // ⭐ เปลี่ยนตรงนี้
+if(role === "doctor") return r.doctorId === email;
 
 return true;
 
 });
+
 
 return(
 
@@ -91,8 +120,8 @@ return(
 Lab Results
 </h1>
 
-{/* Doctor form */}
 
+{/* ================= DOCTOR FORM ================= */}
 {role === "doctor" && (
 
 <div className="bg-white p-6 rounded-xl shadow space-y-3">
@@ -108,7 +137,6 @@ onChange={(e)=>setForm({...form,patient:e.target.value})}
 className="border p-2 rounded w-full"
 />
 
-{/* ⭐ เพิ่มช่องชื่อหมอ */}
 <input
 placeholder="Doctor Name (e.g. Dr. Smith)"
 value={form.doctorName}
@@ -141,8 +169,8 @@ Submit Result
 
 )}
 
-{/* Results list */}
 
+{/* ================= RESULTS ================= */}
 <div className="bg-white p-6 rounded-xl shadow">
 
 <h2 className="text-xl font-semibold mb-4">
@@ -162,12 +190,10 @@ className="border p-4 rounded-lg"
 Patient: {r.patient}
 </p>
 
-{/* ⭐ แสดงชื่อหมอ */}
 <p className="text-sm text-gray-600">
 Doctor: {r.doctorName}
 </p>
 
-{/* ⭐ แสดง doctor ID */}
 <p className="text-xs text-gray-400">
 ID: {r.doctorId}
 </p>
@@ -184,12 +210,13 @@ Test: {r.test}
 Result: {r.result}
 </p>
 
-<p className="text-sm text-green-700">
+{/* ⭐ แสดงหลายบรรทัด */}
+<p className="text-sm text-green-700 whitespace-pre-line">
 Nurse Note: {r.nurseNote || "Waiting for nurse update"}
 </p>
 
-{/* Nurse update */}
 
+{/* ================= NURSE ================= */}
 {role === "nurse" && (
 
 <div className="mt-3">
