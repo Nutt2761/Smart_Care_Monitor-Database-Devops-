@@ -6,7 +6,6 @@ import {
   Shield,
   Calendar,
   FlaskConical,
-  Pill,
   LogOut
 } from "lucide-react";
 
@@ -21,37 +20,11 @@ export default function MainLayout() {
     navigate("/login");
   };
 
-  // 🎨 Theme per role
-  const theme = {
-    admin: {
-      bg: "bg-gray-700",
-      sub: "bg-gray-600",
-      hover: "hover:text-gray-200"
-    },
-    doctor: {
-      bg: "bg-blue-600",
-      sub: "bg-blue-500",
-      hover: "hover:text-blue-200"
-    },
-    nurse: {
-      bg: "bg-pink-500",
-      sub: "bg-pink-400",
-      hover: "hover:text-pink-200"
-    },
-    patient: {
-      bg: "bg-green-600",
-      sub: "bg-green-500",
-      hover: "hover:text-green-200"
-    }
-  };
-
-  const currentTheme = theme[role] || theme.doctor;
-
   return (
     <div className="flex h-screen bg-gray-100">
 
       {/* Sidebar */}
-      <div className={`w-64 text-white shadow-lg p-5 flex flex-col justify-between ${currentTheme.bg}`}>
+      <div className="w-64 bg-gray-700 text-white shadow-lg p-5 flex flex-col justify-between">
 
         <div>
 
@@ -60,11 +33,13 @@ export default function MainLayout() {
           </h1>
 
           {/* User Info */}
-          <div className={`mb-8 p-4 rounded-lg ${currentTheme.sub}`}>
+          <div className="mb-8 bg-gray-600 p-4 rounded-lg">
             <p className="text-sm opacity-80">Logged in as</p>
             <p className="font-semibold truncate">{email}</p>
 
-            <span className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-black/30">
+            <span
+              className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-800"
+            >
               {role?.toUpperCase()}
             </span>
           </div>
@@ -72,44 +47,45 @@ export default function MainLayout() {
           {/* Menu */}
           <nav className="space-y-4">
 
+            {/* Dashboard admin only */}
             {role === "admin" && (
-              <Link to="/dashboard" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+              <Link to="/dashboard" className="flex items-center gap-2 hover:text-gray-300">
                 <LayoutDashboard size={18}/>
                 Dashboard
               </Link>
             )}
 
+            {/* Patients */}
             {(role === "admin" || role === "doctor" || role === "nurse") && (
-              <Link to="/patients" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+              <Link to="/patients" className="flex items-center gap-2 hover:text-gray-300">
                 <Users size={18}/>
                 Patients
               </Link>
             )}
 
-            {(role === "admin" || role === "doctor" || role === "nurse") && (
-              <Link to="/notes" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+            {/* ❌ เอา admin ออก */}
+            {(role === "doctor" || role === "nurse") && (
+              <Link to="/notes" className="flex items-center gap-2 hover:text-gray-300">
                 <FileText size={18}/>
                 Medical Notes
               </Link>
             )}
 
-            <Link to="/appointments" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+            {/* Appointments */}
+            <Link to="/appointments" className="flex items-center gap-2 hover:text-gray-300">
               <Calendar size={18}/>
               Appointments
             </Link>
 
-            <Link to="/lab-results" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+            {/* Lab Results */}
+            <Link to="/lab-results" className="flex items-center gap-2 hover:text-gray-300">
               <FlaskConical size={18}/>
               Lab Results
             </Link>
 
-            <Link to="/medications" className={`flex items-center gap-2 ${currentTheme.hover}`}>
-              <Pill size={18}/>
-              Medications
-            </Link>
-
+            {/* User Management */}
             {role === "admin" && (
-              <Link to="/users" className={`flex items-center gap-2 ${currentTheme.hover}`}>
+              <Link to="/users" className="flex items-center gap-2 hover:text-gray-300">
                 <Shield size={18}/>
                 User Management
               </Link>
