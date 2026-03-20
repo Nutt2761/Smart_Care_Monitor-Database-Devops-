@@ -1,37 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Medications(){
 
 const role = localStorage.getItem("role");
-const email = localStorage.getItem("email");
+const doctorId = localStorage.getItem("email"); // ใช้เป็น ID
 
-const [records,setRecords] = useState([
+// ✅ โหลดจาก localStorage
+const [records,setRecords] = useState(()=>{
+const saved = localStorage.getItem("medications");
+return saved ? JSON.parse(saved) : [
 {
 id:1,
 patient:"patient@mail.com",
-doctor:"doctor@mail.com",
+doctorId:"doctor@mail.com",
+doctorName:"Dr. Smith",
 date:"2026-03-01",
 medicine:"Amoxicillin",
 type:"Capsule",
 usage:"Take 1 capsule after meal",
 nurseNote:"Take after breakfast and dinner"
 }
-]);
+];
+});
+
+// ✅ save ทุกครั้งที่มีการเปลี่ยน
+useEffect(()=>{
+localStorage.setItem("medications",JSON.stringify(records));
+},[records]);
 
 const [form,setForm] = useState({
 patient:"",
+doctorName:"",
 medicine:"",
 type:"",
 usage:"",
 nurseNote:""
 });
 
+
+// ================= DOCTOR =================
 const handleDoctorSubmit = ()=>{
+
+if(!form.patient || !form.medicine || !form.type || !form.usage || !form.doctorName){
+alert("กรอกข้อมูลให้ครบ!");
+return;
+}
 
 const newRecord = {
 id:Date.now(),
 patient:form.patient,
-doctor:email,
+doctorId:doctorId,
+doctorName:form.doctorName,
 date:new Date().toISOString().split("T")[0],
 medicine:form.medicine,
 type:form.type,
@@ -43,6 +62,7 @@ setRecords([newRecord,...records]);
 
 setForm({
 patient:"",
+doctorName:"",
 medicine:"",
 type:"",
 usage:"",
@@ -51,6 +71,8 @@ nurseNote:""
 
 };
 
+
+// ================= NURSE =================
 const handleNurseUpdate = (id)=>{
 
 const updated = records.map(r=>
@@ -65,15 +87,18 @@ setForm({...form,nurseNote:""});
 
 };
 
+
+// ================= FILTER =================
 const visibleRecords = records.filter(r=>{
 
-if(role === "patient") return r.patient === email;
+if(role === "patient") return r.patient === doctorId;
 
-if(role === "doctor") return r.doctor === email;
+if(role === "doctor") return r.doctorId === doctorId;
 
 return true;
 
 });
+
 
 return(
 
@@ -83,8 +108,8 @@ return(
 Medication Records
 </h1>
 
-{/* Doctor form */}
 
+{/* ================= DOCTOR FORM ================= */}
 {role === "doctor" && (
 
 <div className="bg-white p-6 rounded-xl shadow space-y-3">
@@ -97,6 +122,13 @@ Prescribe Medicine
 placeholder="Patient Email"
 value={form.patient}
 onChange={(e)=>setForm({...form,patient:e.target.value})}
+className="border p-2 rounded w-full"
+/>
+
+<input
+placeholder="Doctor Name"
+value={form.doctorName}
+onChange={(e)=>setForm({...form,doctorName:e.target.value})}
 className="border p-2 rounded w-full"
 />
 
@@ -132,8 +164,8 @@ Add Medication
 
 )}
 
-{/* Records */}
 
+{/* ================= RECORD LIST ================= */}
 <div className="bg-white p-6 rounded-xl shadow">
 
 <h2 className="text-xl font-semibold mb-4">
@@ -154,7 +186,11 @@ Patient: {r.patient}
 </p>
 
 <p className="text-sm text-gray-600">
-Doctor: {r.doctor}
+Doctor ID: {r.doctorId}
+</p>
+
+<p className="text-sm font-medium">
+Doctor Name: {r.doctorName}
 </p>
 
 <p className="text-sm">
@@ -177,8 +213,8 @@ Usage: {r.usage}
 Nurse Note: {r.nurseNote || "Waiting for nurse explanation"}
 </p>
 
-{/* Nurse update */}
 
+{/* ================= NURSE ================= */}
 {role === "nurse" && (
 
 <div className="mt-3">
