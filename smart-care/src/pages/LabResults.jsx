@@ -5,11 +5,13 @@ export default function LabResults(){
 const role = localStorage.getItem("role");
 const email = localStorage.getItem("email");
 
+// ⭐ แก้โครงสร้างข้อมูล
 const [records,setRecords] = useState([
 {
 id:1,
 patient:"patient@mail.com",
-doctor:"doctor@mail.com",
+doctorId:"doctor@mail.com",
+doctorName:"Dr. Smith",
 date:"2026-03-01",
 test:"Blood Test",
 result:"High cholesterol",
@@ -17,8 +19,10 @@ nurseNote:"Patient advised to reduce fatty food"
 }
 ]);
 
+// ⭐ เพิ่ม doctorName
 const [form,setForm] = useState({
 patient:"",
+doctorName:"",
 test:"",
 result:"",
 nurseNote:""
@@ -26,10 +30,17 @@ nurseNote:""
 
 const handleDoctorSubmit = ()=>{
 
+// 🔒 กันลืมกรอกชื่อหมอ
+if(!form.doctorName){
+  alert("Please enter doctor name");
+  return;
+}
+
 const newRecord = {
 id:Date.now(),
 patient:form.patient,
-doctor:email,
+doctorId: email,              // ⭐ ใช้ email เป็น ID
+doctorName: form.doctorName,  // ⭐ ชื่อหมอ
 date:new Date().toISOString().split("T")[0],
 test:form.test,
 result:form.result,
@@ -40,6 +51,7 @@ setRecords([newRecord,...records]);
 
 setForm({
 patient:"",
+doctorName:"",
 test:"",
 result:"",
 nurseNote:""
@@ -65,7 +77,7 @@ const visibleRecords = records.filter(r=>{
 
 if(role === "patient") return r.patient === email;
 
-if(role === "doctor") return r.doctor === email;
+if(role === "doctor") return r.doctorId === email; // ⭐ เปลี่ยนตรงนี้
 
 return true;
 
@@ -93,6 +105,14 @@ Add Lab Result
 placeholder="Patient Email"
 value={form.patient}
 onChange={(e)=>setForm({...form,patient:e.target.value})}
+className="border p-2 rounded w-full"
+/>
+
+{/* ⭐ เพิ่มช่องชื่อหมอ */}
+<input
+placeholder="Doctor Name (e.g. Dr. Smith)"
+value={form.doctorName}
+onChange={(e)=>setForm({...form,doctorName:e.target.value})}
 className="border p-2 rounded w-full"
 />
 
@@ -142,8 +162,14 @@ className="border p-4 rounded-lg"
 Patient: {r.patient}
 </p>
 
+{/* ⭐ แสดงชื่อหมอ */}
 <p className="text-sm text-gray-600">
-Doctor: {r.doctor}
+Doctor: {r.doctorName}
+</p>
+
+{/* ⭐ แสดง doctor ID */}
+<p className="text-xs text-gray-400">
+ID: {r.doctorId}
 </p>
 
 <p className="text-sm">
