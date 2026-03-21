@@ -3,52 +3,92 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 
 export default function AddPatient() {
-
   const navigate = useNavigate();
-
   const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("userId");
 
   const [patient, setPatient] = useState({
-    id: "",
-    fullName: "",
-    birthDate: "",
-    age: "",
+    patient_code: "",
+    full_name: "",
+    birth_date: "",
     weight: "",
     height: "",
-    bloodType: "",
-    chronicDisease: "",
-    allergyHistory: "",
-    currentMedication: "",
-    emergencyContact: "",
+    blood_type: "",
+    chronic_disease: "",
+    allergy: "",
+    emergency_contact: "",
     status: "stable",
   });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const API_URL = "http://localhost:5001/api/patients";
 
   const handleChange = (e) => {
     setPatient({
       ...patient,
       [e.target.name]: e.target.value,
     });
+    setError("");
   };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const existingPatients =
-    JSON.parse(localStorage.getItem("patients")) || [];
+    if (!userId) {
+      setError("User not found. Please login again.");
+      return;
+    }
 
-  const updatedPatients = [...existingPatients, patient];
+    if (!patient.patient_code || !patient.full_name || !patient.birth_date) {
+      setError("Please fill in required fields");
+      return;
+    }
 
-  localStorage.setItem("patients", JSON.stringify(updatedPatients));
+    try {
+      setLoading(true);
+      setError("");
 
-  alert("Patient added successfully");
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: Number(userId),
+          patient_code: patient.patient_code.trim(),
+          full_name: patient.full_name.trim(),
+          birth_date: patient.birth_date,
+          weight: patient.weight,
+          height: patient.height,
+          blood_type: patient.blood_type,
+          chronic_disease: patient.chronic_disease.trim(),
+          allergy: patient.allergy.trim(),
+          emergency_contact: patient.emergency_contact.trim(),
+          status: patient.status,
+        }),
+      });
 
-  navigate("/patients");
-};
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to add patient");
+        return;
+      }
+
+      alert("Patient added successfully");
+      navigate("/patients");
+    } catch (err) {
+      console.error("ADD PATIENT ERROR:", err);
+      setError("Cannot connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-
-      {/* Back Button */}
       <button
         onClick={() => navigate("/patients")}
         className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
@@ -57,83 +97,69 @@ export default function AddPatient() {
         Back
       </button>
 
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Add Patient</h1>
-        <p className="text-gray-600">
-          Enter patient medical information
-        </p>
+        <p className="text-gray-600">Enter patient medical information</p>
       </div>
 
-      {/* Form */}
       <div className="bg-white shadow-md rounded-xl p-6">
-
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
+          {error && (
+            <div className="md:col-span-2 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
-          {/* Patient ID */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Patient ID
+              Patient Code
             </label>
             <input
-              name="id"
-              value={patient.id}
+              name="patient_code"
+              value={patient.patient_code}
               onChange={handleChange}
               required
+              placeholder="P001"
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Full Name */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Full Name
             </label>
             <input
-              name="fullName"
-              value={patient.fullName}
+              name="full_name"
+              value={patient.full_name}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Birth Date */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Birth Date
             </label>
             <input
               type="date"
-              name="birthDate"
-              value={patient.birthDate}
+              name="birth_date"
+              value={patient.birth_date}
               onChange={handleChange}
+              required
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Age */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Age
-            </label>
-            <input
-              name="age"
-              value={patient.age}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg"
-            />
-          </div>
-
-          {/* Weight */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Weight (kg)
             </label>
             <input
+              type="number"
               name="weight"
               value={patient.weight}
               onChange={handleChange}
@@ -141,12 +167,12 @@ export default function AddPatient() {
             />
           </div>
 
-          {/* Height */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Height (cm)
             </label>
             <input
+              type="number"
               name="height"
               value={patient.height}
               onChange={handleChange}
@@ -154,82 +180,64 @@ export default function AddPatient() {
             />
           </div>
 
-          {/* Blood Type */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Blood Type
             </label>
             <select
-              name="bloodType"
-              value={patient.bloodType}
+              name="blood_type"
+              value={patient.blood_type}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg"
             >
               <option value="">Select</option>
-              <option>O+</option>
-              <option>O-</option>
-              <option>A+</option>
-              <option>A-</option>
-              <option>B+</option>
-              <option>B-</option>
-              <option>AB+</option>
-              <option>AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
             </select>
           </div>
 
-          {/* Chronic Disease */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Chronic Disease
             </label>
             <input
-              name="chronicDisease"
-              value={patient.chronicDisease}
+              name="chronic_disease"
+              value={patient.chronic_disease}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Allergy History */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Allergy History
+              Allergy
             </label>
             <input
-              name="allergyHistory"
-              value={patient.allergyHistory}
+              name="allergy"
+              value={patient.allergy}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Current Medication */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Current Medication
-            </label>
-            <input
-              name="currentMedication"
-              value={patient.currentMedication}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg"
-            />
-          </div>
-
-          {/* Emergency Contact */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Emergency Contact
             </label>
             <input
-              name="emergencyContact"
-              value={patient.emergencyContact}
+              name="emergency_contact"
+              value={patient.emergency_contact}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg"
             />
           </div>
 
-          {/* Status */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Status
@@ -241,22 +249,24 @@ export default function AddPatient() {
               className="w-full px-3 py-2 border rounded-lg"
             >
               <option value="stable">Stable</option>
-              <option value="active">Active</option>
               <option value="critical">Critical</option>
             </select>
           </div>
 
-          {/* Save Button */}
           <div className="md:col-span-2">
             <button
               type="submit"
-              className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+              disabled={loading}
+              className={`flex items-center justify-center w-full text-white py-3 rounded-lg ${
+                loading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
               <Save size={18} className="mr-2" />
-              Save Patient
+              {loading ? "Saving..." : "Save Patient"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

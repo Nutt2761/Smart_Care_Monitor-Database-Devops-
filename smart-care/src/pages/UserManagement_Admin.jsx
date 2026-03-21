@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { Trash2, Edit, Save, X, Plus } from "lucide-react";
+import { Trash2, Edit, Plus } from "lucide-react";
 
 export default function UserManagement() {
-
   const role = localStorage.getItem("role");
   const currentEmail = localStorage.getItem("email");
 
@@ -11,49 +10,11 @@ export default function UserManagement() {
     return <Navigate to="/" />;
   }
 
+  const API_URL = "http://localhost:5001/api/users";
+
   const [search, setSearch] = useState("");
-
-  const [users, setUsers] = useState(() => {
-
-    const savedUsers = localStorage.getItem("users");
-
-    if (savedUsers) {
-      return JSON.parse(savedUsers);
-    }
-
-    // default users
-    return [
-      {
-        id: 1,
-        email: "admin@mail.com",
-        password: "admin123",
-        role: "admin",
-        status: "Active",
-      },
-      {
-        id: 2,
-        email: "doctor@mail.com",
-        password: "doctor123",
-        role: "doctor",
-        status: "Active",
-      },
-      {
-        id: 3,
-        email: "nurse@mail.com",
-        password: "nurse123",
-        role: "nurse",
-        status: "Active",
-      },
-      {
-        id: 4,
-        email: "patient@mail.com",
-        password: "patient123",
-        role: "patient",
-        status: "Active",
-      },
-    ];
-
-  });
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [newUser, setNewUser] = useState({
     email: "",
@@ -64,9 +25,30 @@ export default function UserManagement() {
   const [editingId, setEditingId] = useState(null);
   const [editedUser, setEditedUser] = useState({});
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to load users");
+        return;
+      }
+
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+      alert("Cannot connect to backend");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem("users", JSON.stringify(users));
-  }, [users]);
+    fetchUsers();
+  }, []);
 
   const roleBadge = (role) => {
     if (role === "admin") return "bg-red-100 text-red-700";
@@ -76,81 +58,129 @@ export default function UserManagement() {
     return "bg-gray-100 text-gray-700";
   };
 
-  // Add User
-  const handleAddUser = () => {
-
-    if (!newUser.email || !newUser.password) return;
-
-    const exists = users.some((u) => u.email === newUser.email);
-
-    if (exists) {
-      alert("User already exists");
+  const handleAddUser = async () => {
+    if (!newUser.email || !newUser.password) {
+      alert("Please fill email and password");
       return;
     }
 
-    const user = {
-      id: Date.now(),
-      email: newUser.email,
-      password: newUser.password,
-      role: newUser.role,
-      status: "Active",
-    };
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      });
 
-    setUsers([...users, user]);
+      const data = await res.json();
 
-    setNewUser({
-      email: "",
-      password: "",
-      role: "doctor",
-    });
+      if (!res.ok) {
+        alert(data.message || "Error");
+        return;
+      }
 
+      setNewUser({
+        email: "",
+        password: "",
+        role: "doctor",
+      });
+
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Cannot connect to backend");
+    }
   };
 
-  // Delete
-  const handleDelete = (id, email) => {
-
+  const handleDelete = async (id, email) => {
     if (email === currentEmail) {
       alert("You cannot delete yourself");
       return;
     }
 
     if (window.confirm("Delete this user?")) {
-      setUsers(users.filter((u) => u.id !== id));
-    }
+      try {
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+        });
 
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.message || "Error");
+          return;
+        }
+
+        fetchUsers();
+      } catch (err) {
+        console.error(err);
+        alert("Cannot connect to backend");
+      }
+    }
   };
 
-  // Edit
   const handleEdit = (user) => {
     setEditingId(user.id);
-    setEditedUser(user);
+    setEditedUser({
+      email: user.email,
+      role: user.role,
+    });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`${API_URL}/${editingId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editedUser),
+      });
 
-    setUsers(
-      users.map((u) =>
-        u.id === editingId ? editedUser : u
-      )
-    );
+      const data = await res.json();
 
-    setEditingId(null);
+      if (!res.ok) {
+        alert(data.message || "Error");
+        return;
+      }
 
+      setEditingId(null);
+      setEditedUser({});
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Cannot connect to backend");
+    }
   };
 
-  const toggleStatus = (id) => {
+  const toggleStatus = async (id) => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
 
-    setUsers(
-      users.map((u) =>
-        u.id === id
-          ? {
-              ...u,
-              status: u.status === "Active" ? "Inactive" : "Active",
-            }
-          : u
-      )
-    );
+    const newStatus = user.status === "active" ? "inactive" : "active";
 
+    try {
+      const res = await fetch(`${API_URL}/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Error");
+        return;
+      }
+
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Cannot connect to backend");
+    }
   };
 
   const filteredUsers = users.filter((u) =>
@@ -159,10 +189,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-
-      <h1 className="text-3xl font-bold">
-        User Management
-      </h1>
+      <h1 className="text-3xl font-bold">User Management</h1>
 
       <input
         type="text"
@@ -172,16 +199,10 @@ export default function UserManagement() {
         className="border px-4 py-2 rounded-lg w-full md:w-1/3"
       />
 
-      {/* Add User */}
-
       <div className="bg-white p-6 rounded-xl shadow space-y-4">
-
-        <h2 className="font-semibold">
-          Add New User
-        </h2>
+        <h2 className="font-semibold">Add New User</h2>
 
         <div className="grid md:grid-cols-4 gap-4">
-
           <input
             type="email"
             placeholder="Email"
@@ -189,7 +210,7 @@ export default function UserManagement() {
             onChange={(e) =>
               setNewUser({
                 ...newUser,
-                email: e.target.value
+                email: e.target.value,
               })
             }
             className="border px-3 py-2 rounded"
@@ -202,7 +223,7 @@ export default function UserManagement() {
             onChange={(e) =>
               setNewUser({
                 ...newUser,
-                password: e.target.value
+                password: e.target.value,
               })
             }
             className="border px-3 py-2 rounded"
@@ -213,7 +234,7 @@ export default function UserManagement() {
             onChange={(e) =>
               setNewUser({
                 ...newUser,
-                role: e.target.value
+                role: e.target.value,
               })
             }
             className="border px-3 py-2 rounded"
@@ -231,93 +252,120 @@ export default function UserManagement() {
             <Plus size={16} />
             Add
           </button>
-
         </div>
-
       </div>
-
-      {/* User List */}
 
       <div className="bg-white p-6 rounded-xl shadow">
+        <h2 className="font-semibold mb-4">All Users</h2>
 
-        <h2 className="font-semibold mb-4">
-          All Users
-        </h2>
-
-        <div className="space-y-4">
-
-          {filteredUsers.map((user) => (
-
-            <div
-              key={user.id}
-              className="flex justify-between items-center border-b pb-4"
-            >
-
-              <div className="flex items-center gap-3">
-
-                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                  {user.email.charAt(0).toUpperCase()}
-                </div>
-
-                <div>
-
-                  <p className="font-semibold">
-                    {user.email}
-                  </p>
-
-                  <div className="flex items-center gap-2 text-sm">
-
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${roleBadge(user.role)}`}
-                    >
-                      {user.role}
-                    </span>
-
-                    <span className="text-gray-500">
-                      {user.status}
-                    </span>
-
+        {loading ? (
+          <p>Loading users...</p>
+        ) : (
+          <div className="space-y-4">
+            {filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className="flex justify-between items-center border-b pb-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                    {user.email.charAt(0).toUpperCase()}
                   </div>
 
+                  <div>
+                    {editingId === user.id ? (
+                      <>
+                        <input
+                          value={editedUser.email}
+                          onChange={(e) =>
+                            setEditedUser({
+                              ...editedUser,
+                              email: e.target.value,
+                            })
+                          }
+                          className="border px-2 py-1 mb-1"
+                        />
+
+                        <select
+                          value={editedUser.role}
+                          onChange={(e) =>
+                            setEditedUser({
+                              ...editedUser,
+                              role: e.target.value,
+                            })
+                          }
+                          className="border px-2 py-1"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="doctor">Doctor</option>
+                          <option value="nurse">Nurse</option>
+                          <option value="patient">Patient</option>
+                        </select>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-semibold">{user.email}</p>
+
+                        <div className="flex items-center gap-2 text-sm">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${roleBadge(
+                              user.role
+                            )}`}
+                          >
+                            {user.role}
+                          </span>
+
+                          <span className="text-gray-500">
+                            {user.status}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
+                <div className="flex gap-2">
+                  {editingId === user.id ? (
+                    <button
+                      onClick={handleSave}
+                      className="bg-green-600 text-white px-3 py-1 rounded"
+                    >
+                      Save
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => toggleStatus(user.id)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded"
+                      >
+                        Toggle
+                      </button>
+
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                      >
+                        <Edit size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(user.id, user.email)}
+                        className="bg-red-600 text-white px-3 py-1 rounded"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
+            ))}
 
-              <div className="flex gap-2">
-
-                <button
-                  onClick={() => toggleStatus(user.id)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                >
-                  Toggle
-                </button>
-
-                <button
-                  onClick={() => handleEdit(user)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
-                >
-                  <Edit size={16} />
-                </button>
-
-                <button
-                  onClick={() =>
-                    handleDelete(user.id, user.email)
-                  }
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  <Trash2 size={16} />
-                </button>
-
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
-
+            {filteredUsers.length === 0 && (
+              <p className="text-gray-500">No users found</p>
+            )}
+          </div>
+        )}
       </div>
-
     </div>
   );
 }
