@@ -1,60 +1,55 @@
-const STORAGE_KEY = "patients";
+const API_URL = "http://localhost:5001/api/patients";
 
-export const getPatients = () => {
+export const getPatients = async () => {
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  const data = localStorage.getItem(STORAGE_KEY);
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch patients");
+  }
 
-  if (data) return JSON.parse(data);
+  return data;
+};
 
-  const defaultPatients = [
-    {
-      id: "P001",
-      fullName: "John Smith",
-      age: 45,
-      bloodType: "O+",
-      chronicDisease: "Hypertension",
-      status: "stable",
+export const getPatientById = async (id) => {
+  const res = await fetch(`${API_URL}/${id}`);
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch patient");
+  }
+
+  return data;
+};
+
+export const addPatient = async (patientData) => {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-    {
-      id: "P002",
-      fullName: "Emma Johnson",
-      age: 62,
-      bloodType: "A+",
-      chronicDisease: "Diabetes",
-      status: "critical",
-    },
-  ];
+    body: JSON.stringify(patientData),
+  });
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultPatients));
+  const data = await res.json();
 
-  return defaultPatients;
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to add patient");
+  }
 
+  return data;
 };
 
-export const savePatients = (patients) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
-};
+export const deletePatient = async (id) => {
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+  });
 
-export const addPatient = (patient) => {
+  const data = await res.json();
 
-  const patients = getPatients();
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to delete patient");
+  }
 
-  const updated = [...patients, patient];
-
-  savePatients(updated);
-
-  return updated;
-
-};
-
-export const deletePatient = (id) => {
-
-  const patients = getPatients();
-
-  const updated = patients.filter(p => p.id !== id);
-
-  savePatients(updated);
-
-  return updated;
-
+  return data;
 };
