@@ -2,77 +2,76 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const users = [
-    {
-      email: "admin@mail.com",
-      password: "admin123",
-      role: "admin",
-    },
-    {
-      email: "doctor@mail.com",
-      password: "doctor123",
-      role: "doctor",
-    },
-    {
-      email: "nurse@mail.com",
-      password: "nurse123",
-      role: "nurse",
-    },
-    {
-      email: "patient@mail.com",
-      password: "patient123",
-      role: "patient",
-    },
-  ];
-
-  const handleLogin = () => {
-
+  const handleLogin = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
 
-    const foundUser = users.find(
-      (user) =>
-        user.email === trimmedEmail &&
-        user.password === trimmedPassword
-    );
-
-    if (foundUser) {
-
-      localStorage.setItem("role", foundUser.role);
-      localStorage.setItem("email", foundUser.email);
-
-      // redirect ตาม role
-      if (foundUser.role === "admin") {
-        navigate("/dashboard");
-      } else if (foundUser.role === "doctor") {
-        navigate("/patients");
-      } else if (foundUser.role === "nurse") {
-        navigate("/patients");
-      } else if (foundUser.role === "patient") {
-        navigate("/lab-results");
-      }
-
-    } else {
-
-      setError("Invalid email or password");
-
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Please enter email and password");
+      return;
     }
 
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch("http://localhost:5001/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Invalid email or password");
+        return;
+      }
+
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("email", data.email);
+      localStorage.setItem("userId", data.id);
+
+      if (data.role === "admin") {
+        navigate("/dashboard");
+      } else if (data.role === "doctor") {
+        navigate("/patients");
+      } else if (data.role === "nurse") {
+        navigate("/patients");
+      } else if (data.role === "patient") {
+        navigate("/lab-results");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      setError("Cannot connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
   };
 
   return (
-
     <div className="flex items-center justify-center h-screen bg-gray-100">
-
       <div className="bg-white p-8 rounded-xl shadow-md w-96 space-y-4">
-
         <h1 className="text-2xl font-bold text-center">
           Smart Care Login
         </h1>
@@ -92,6 +91,7 @@ export default function Login() {
             setEmail(e.target.value);
             setError("");
           }}
+          onKeyDown={handleKeyDown}
         />
 
         <input
@@ -103,26 +103,21 @@ export default function Login() {
             setPassword(e.target.value);
             setError("");
           }}
+          onKeyDown={handleKeyDown}
         />
 
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg"
+          disabled={loading}
+          className={`w-full text-white py-2 rounded-lg ${
+            loading
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600"
+          }`}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
-
-        <div className="text-sm text-gray-500 mt-4">
-          <p>Admin: admin@mail.com / admin123</p>
-          <p>Doctor: doctor@mail.com / doctor123</p>
-          <p>Nurse: nurse@mail.com / nurse123</p>
-          <p>Patient: patient@mail.com / patient123</p>
-        </div>
-
       </div>
-
     </div>
-
   );
-
 }

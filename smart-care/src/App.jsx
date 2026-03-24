@@ -10,6 +10,7 @@ import VitalSigns from "./pages/VitalSigns";
 import MedicalNotes from "./pages/MedicalNotes";
 import UserManagement from "./pages/UserManagement_Admin";
 import AddPatient from "./pages/AddPatient";
+import AddVitalSign from "./pages/AddVitalSign";
 import Appointments from "./pages/Appointments";
 import LabResults from "./pages/LabResults";
 import Medications from "./pages/Medications";
@@ -18,7 +19,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* redirect root */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
 
@@ -33,7 +33,6 @@ function App() {
             </ProtectedRoute>
           }
         >
-
           {/* dashboard */}
           <Route
             path="/dashboard"
@@ -48,7 +47,7 @@ function App() {
           <Route
             path="/patients"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse"]}>
                 <Patients />
               </ProtectedRoute>
             }
@@ -58,7 +57,7 @@ function App() {
           <Route
             path="/patients/add"
             element={
-              <ProtectedRoute allow={["admin","doctor"]}>
+              <ProtectedRoute allow={["admin", "doctor"]}>
                 <AddPatient />
               </ProtectedRoute>
             }
@@ -68,8 +67,18 @@ function App() {
           <Route
             path="/patients/:id"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse"]}>
                 <PatientDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* add vital sign */}
+          <Route
+            path="/patients/:id/vitals/add"
+            element={
+              <ProtectedRoute allow={["admin", "doctor", "nurse"]}>
+                <AddVitalSign />
               </ProtectedRoute>
             }
           />
@@ -78,7 +87,7 @@ function App() {
           <Route
             path="/notes"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse"]}>
                 <MedicalNotes />
               </ProtectedRoute>
             }
@@ -88,7 +97,7 @@ function App() {
           <Route
             path="/vitals"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse"]}>
                 <VitalSigns />
               </ProtectedRoute>
             }
@@ -98,7 +107,7 @@ function App() {
           <Route
             path="/appointments"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse", "patient"]}>
                 <Appointments />
               </ProtectedRoute>
             }
@@ -108,17 +117,17 @@ function App() {
           <Route
             path="/lab-results"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse", "patient"]}>
                 <LabResults />
               </ProtectedRoute>
             }
           />
 
-          {/* medications 💊 */}
+          {/* medications */}
           <Route
             path="/medications"
             element={
-              <ProtectedRoute allow={["admin","doctor","nurse","patient"]}>
+              <ProtectedRoute allow={["admin", "doctor", "nurse", "patient"]}>
                 <Medications />
               </ProtectedRoute>
             }
@@ -133,9 +142,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
         </Route>
-
       </Routes>
     </BrowserRouter>
   );

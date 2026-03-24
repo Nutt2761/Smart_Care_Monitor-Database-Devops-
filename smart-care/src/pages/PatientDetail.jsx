@@ -8,15 +8,19 @@ import {
   Droplet,
   Wind,
   AlertCircle,
+  Plus,
 } from "lucide-react";
+import { getPatientById } from "../services/patientService";
+import { getVitalsByPatientId } from "../services/VitalService";
 
 export default function PatientDetail() {
-
   const { id } = useParams();
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
 
   const [patient, setPatient] = useState(null);
+  const [vitals, setVitals] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const thresholds = {
     heartRate: { min: 60, max: 100 },
@@ -26,66 +30,61 @@ export default function PatientDetail() {
     respiration: { min: 12, max: 20 },
   };
 
-  const [vitals, setVitals] = useState({
-    patientId: id,
-    heartRate: 75,
-    temperature: 36.6,
-    spo2: 98,
-    systolic: 120,
-    diastolic: 80,
-    respiration: 16,
-    timestamp: new Date(),
-  });
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return "-";
+
+    const today = new Date();
+    const dob = new Date(birthDate);
+
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < dob.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    const storedPatients =
-      JSON.parse(localStorage.getItem("patients")) || [];
+        const patientData = await getPatientById(id);
+        setPatient(patientData);
 
-    const foundPatient = storedPatients.find((p) => p.id === id);
+        const vitalsData = await getVitalsByPatientId(id);
+        setVitals(vitalsData.length > 0 ? vitalsData[0] : null);
+      } catch (err) {
+        console.error("PATIENT DETAIL ERROR:", err);
+        setError("Cannot load patient detail");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setPatient(foundPatient);
-
+    fetchData();
   }, [id]);
 
-  useEffect(() => {
-
-    const interval = setInterval(() => {
-
-      setVitals((prev) => ({
-        ...prev,
-        heartRate: prev.heartRate + (Math.random() - 0.5) * 6,
-        temperature: prev.temperature + (Math.random() - 0.5) * 0.3,
-        spo2: prev.spo2 + (Math.random() - 0.5) * 1,
-        systolic: prev.systolic + (Math.random() - 0.5) * 6,
-        diastolic: prev.diastolic + (Math.random() - 0.5) * 4,
-        respiration: prev.respiration + (Math.random() - 0.5) * 2,
-        timestamp: new Date(),
-      }));
-
-    }, 3000);
-
-    return () => clearInterval(interval);
-
-  }, [id]);
-
-  const isAbnormal = (value, min, max) =>
-    value < min || value > max;
-
-  if (!patient) {
-    return (
-      <div className="p-6 text-red-600">
-        Patient not found
-      </div>
-    );
-  }
+  const isAbnormal = (value, min, max) => {
+    if (value === null || value === undefined || value === "") return false;
+    return value < min || value > max;
+  };
 
   const abnormal =
-    isAbnormal(vitals.heartRate, thresholds.heartRate.min, thresholds.heartRate.max) ||
-    isAbnormal(vitals.temperature, thresholds.temperature.min, thresholds.temperature.max) ||
-    vitals.spo2 < thresholds.spo2.min ||
-    isAbnormal(vitals.systolic, thresholds.systolic.min, thresholds.systolic.max) ||
-    isAbnormal(vitals.respiration, thresholds.respiration.min, thresholds.respiration.max);
+    vitals &&
+    (
+      isAbnormal(vitals.heart_rate, thresholds.heartRate.min, thresholds.heartRate.max) ||
+      isAbnormal(vitals.temperature, thresholds.temperature.min, thresholds.temperature.max) ||
+      (vitals.spo2 !== null && vitals.spo2 < thresholds.spo2.min) ||
+      isAbnormal(vitals.systolic, thresholds.systolic.min, thresholds.systolic.max) ||
+      isAbnormal(vitals.respiration, thresholds.respiration.min, thresholds.respiration.max)
+    );
 
   const Card = ({ title, value, unit, icon, abnormal }) => (
     <div
@@ -101,7 +100,7 @@ export default function PatientDetail() {
       </div>
 
       <p className="text-2xl font-bold">
-        {value} <span className="text-sm">{unit}</span>
+        {value ?? "-"} <span className="text-sm">{unit}</span>
       </p>
 
       {abnormal && (
@@ -113,43 +112,56 @@ export default function PatientDetail() {
     </div>
   );
 
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading patient detail...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-600">{error}</div>;
+  }
+
+  if (!patient) {
+    return <div className="p-6 text-red-600">Patient not found</div>;
+  }
+
   return (
     <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-blue-600 hover:underline"
+        >
+          <ArrowLeft size={18} className="mr-2" />
+          Back
+        </button>
 
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-blue-600 hover:underline"
-      >
-        <ArrowLeft size={18} className="mr-2" />
-        Back
-      </button>
+        <button
+          onClick={() => navigate(`/patients/${id}/vitals/add`)}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          <Plus size={18} className="mr-2" />
+          Add Vital Sign
+        </button>
+      </div>
 
-      {/* Patient Info */}
       <div>
-
-        <h1 className="text-3xl font-bold">
-          {patient.fullName}
-        </h1>
+        <h1 className="text-3xl font-bold">{patient.full_name}</h1>
 
         <p className="text-gray-600">
-          Patient ID: {patient.id}
+          Patient ID: {patient.patient_code}
         </p>
 
         <div className="mt-4 grid md:grid-cols-3 gap-4 text-sm">
-
-          <p><b>Age:</b> {patient.age}</p>
-          <p><b>Birth Date:</b> {patient.birthDate}</p>
-          <p><b>Blood Type:</b> {patient.bloodType}</p>
-          <p><b>Weight:</b> {patient.weight} kg</p>
-          <p><b>Height:</b> {patient.height} cm</p>
+          <p><b>Age:</b> {calculateAge(patient.birth_date)}</p>
+          <p><b>Birth Date:</b> {patient.birth_date?.slice(0, 10)}</p>
+          <p><b>Blood Type:</b> {patient.blood_type || "-"}</p>
+          <p><b>Weight:</b> {patient.weight || "-"} kg</p>
+          <p><b>Height:</b> {patient.height || "-"} cm</p>
           <p><b>Status:</b> {patient.status}</p>
-          <p><b>Chronic Disease:</b> {patient.chronicDisease}</p>
-          <p><b>Allergy:</b> {patient.allergyHistory}</p>
-          <p><b>Medication:</b> {patient.currentMedication}</p>
-          <p><b>Emergency Contact:</b> {patient.emergencyContact}</p>
-
+          <p><b>Chronic Disease:</b> {patient.chronic_disease || "-"}</p>
+          <p><b>Allergy:</b> {patient.allergy || "-"}</p>
+          <p><b>Emergency Contact:</b> {patient.emergency_contact || "-"}</p>
         </div>
-
       </div>
 
       {(patient.status === "critical" || abnormal) && (
@@ -158,79 +170,83 @@ export default function PatientDetail() {
         </div>
       )}
 
-      {/* Vital Signs */}
       <div className="bg-white shadow-md rounded-xl p-6">
-
         <h2 className="text-xl font-semibold mb-6">
-          Vital Signs (Live Monitoring)
+          Latest Vital Signs
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        {!vitals ? (
+          <p className="text-gray-500">No vital signs recorded yet</p>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card
+                title="Heart Rate"
+                value={vitals.heart_rate}
+                unit="bpm"
+                icon={<Heart />}
+                abnormal={isAbnormal(
+                  vitals.heart_rate,
+                  thresholds.heartRate.min,
+                  thresholds.heartRate.max
+                )}
+              />
 
-          <Card
-            title="Heart Rate"
-            value={Math.round(vitals.heartRate)}
-            unit="bpm"
-            icon={<Heart />}
-            abnormal={isAbnormal(
-              vitals.heartRate,
-              thresholds.heartRate.min,
-              thresholds.heartRate.max
-            )}
-          />
+              <Card
+                title="Blood Pressure"
+                value={
+                  vitals.systolic != null && vitals.diastolic != null
+                    ? `${vitals.systolic}/${vitals.diastolic}`
+                    : "-"
+                }
+                unit="mmHg"
+                icon={<Droplet />}
+                abnormal={isAbnormal(
+                  vitals.systolic,
+                  thresholds.systolic.min,
+                  thresholds.systolic.max
+                )}
+              />
 
-          <Card
-            title="Blood Pressure"
-            value={`${Math.round(vitals.systolic)}/${Math.round(vitals.diastolic)}`}
-            unit="mmHg"
-            icon={<Droplet />}
-            abnormal={isAbnormal(
-              vitals.systolic,
-              thresholds.systolic.min,
-              thresholds.systolic.max
-            )}
-          />
+              <Card
+                title="Respiration"
+                value={vitals.respiration}
+                unit="/min"
+                icon={<Wind />}
+                abnormal={isAbnormal(
+                  vitals.respiration,
+                  thresholds.respiration.min,
+                  thresholds.respiration.max
+                )}
+              />
 
-          <Card
-            title="Respiration"
-            value={Math.round(vitals.respiration)}
-            unit="/min"
-            icon={<Wind />}
-            abnormal={isAbnormal(
-              vitals.respiration,
-              thresholds.respiration.min,
-              thresholds.respiration.max
-            )}
-          />
+              <Card
+                title="Temperature"
+                value={vitals.temperature}
+                unit="°C"
+                icon={<Thermometer />}
+                abnormal={isAbnormal(
+                  vitals.temperature,
+                  thresholds.temperature.min,
+                  thresholds.temperature.max
+                )}
+              />
 
-          <Card
-            title="Temperature"
-            value={vitals.temperature.toFixed(1)}
-            unit="°C"
-            icon={<Thermometer />}
-            abnormal={isAbnormal(
-              vitals.temperature,
-              thresholds.temperature.min,
-              thresholds.temperature.max
-            )}
-          />
+              <Card
+                title="SpO2"
+                value={vitals.spo2}
+                unit="%"
+                icon={<Activity />}
+                abnormal={vitals.spo2 != null && vitals.spo2 < thresholds.spo2.min}
+              />
+            </div>
 
-          <Card
-            title="SpO2"
-            value={Math.round(vitals.spo2)}
-            unit="%"
-            icon={<Activity />}
-            abnormal={vitals.spo2 < thresholds.spo2.min}
-          />
-
-        </div>
-
-        <p className="text-xs text-gray-400 mt-6">
-          Last Updated: {vitals.timestamp.toLocaleTimeString()}
-        </p>
-
+            <p className="text-xs text-gray-400 mt-6">
+              Last Updated: {new Date(vitals.recorded_at).toLocaleString()}
+            </p>
+          </>
+        )}
       </div>
-
     </div>
   );
 }
